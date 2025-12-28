@@ -4,7 +4,7 @@ document.getElementById("linkForm").onsubmit = async (e) => {
     const code = document.getElementById("code").value;
     const websiteUserId = document.getElementById("websiteUserId").value;
 
-    const res = await fetch("https://your-app.onrender.com/verify-code", {
+    const res = await fetch("https://connect-1quantum-developers.onrender.com/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, websiteUserId })
