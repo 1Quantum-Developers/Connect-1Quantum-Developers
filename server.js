@@ -10,7 +10,7 @@ app.use(cors());
 // Serve frontend files from /public
 app.use(express.static(path.join(__dirname, "public")));
 
-// Temporary storage (use Redis or a real DB in production)
+// Temporary storage (use Redis or DB in production)
 const pendingCodes = {};
 const linkedAccounts = {};
 
@@ -60,8 +60,8 @@ app.get("/linked/:robloxUserId", (req, res) => {
     res.json({ websiteUserId: linkedAccounts[id] || null });
 });
 
-// Fallback route (fixes "Cannot GET /")
-app.get("*", (req, res) => {
+// FIXED fallback route for Express 5
+app.get("/*", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
