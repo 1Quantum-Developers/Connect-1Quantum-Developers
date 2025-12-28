@@ -1,33 +1,33 @@
 const express = require("express");
-const crypto = require("crypto");
+const cors = require("cors");
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
-// In-memory store (use Redis or a database in production)
-const pendingCodes = {};  
-const linkedAccounts = {}; 
+// Temporary storage (use Redis or DB in production)
+const pendingCodes = {};
+const linkedAccounts = {};
 
-// Generate a code for a website user
-app.post("/generate-code", (req, res) => {
-    const { websiteUserId } = req.body;
+// Roblox sends code here
+app.post("/store-code", (req, res) => {
+    const { code, robloxUserId } = req.body;
 
-    if (!websiteUserId) {
-        return res.status(400).json({ error: "Missing websiteUserId" });
+    if (!code || !robloxUserId) {
+        return res.status(400).json({ error: "Missing fields" });
     }
 
-    const code = crypto.randomBytes(3).toString("hex"); // 6-char code
     pendingCodes[code] = {
-        websiteUserId,
+        robloxUserId,
         expires: Date.now() + 5 * 60 * 1000 // 5 minutes
     };
 
-    res.json({ code });
+    res.json({ success: true });
 });
 
-// Roblox verifies the code
+// Website verifies code here
 app.post("/verify-code", (req, res) => {
-    const { code, robloxUserId } = req.body;
+    const { code, websiteUserId } = req.body;
 
     const entry = pendingCodes[code];
     if (!entry) {
@@ -39,16 +39,16 @@ app.post("/verify-code", (req, res) => {
         return res.status(400).json({ error: "Code expired" });
     }
 
-    linkedAccounts[robloxUserId] = entry.websiteUserId;
+    linkedAccounts[entry.robloxUserId] = websiteUserId;
     delete pendingCodes[code];
 
     res.json({ success: true });
 });
 
-// Check linked account
+// Optional: check link status
 app.get("/linked/:robloxUserId", (req, res) => {
     const id = req.params.robloxUserId;
     res.json({ websiteUserId: linkedAccounts[id] || null });
 });
 
-app.listen(3000, () => console.log("Server running"));
+app.listen(3000, () => console.log("Server running on port 3000"));
