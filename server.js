@@ -60,8 +60,8 @@ app.get("/linked/:robloxUserId", (req, res) => {
     res.json({ websiteUserId: linkedAccounts[id] || null });
 });
 
-// FIXED fallback route for Express 5
-app.get("/*", (req, res) => {
+// FIXED fallback route for Express 5 (regex only)
+app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
