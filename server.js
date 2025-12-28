@@ -1,15 +1,20 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 
-// Temporary storage (use Redis or DB in production)
+// Serve frontend files from /public
+app.use(express.static(path.join(__dirname, "public")));
+
+// Temporary storage (use Redis or a real DB in production)
 const pendingCodes = {};
 const linkedAccounts = {};
 
-// Roblox sends code here
+// Roblox sends the generated code here
 app.post("/store-code", (req, res) => {
     const { code, robloxUserId } = req.body;
 
@@ -22,10 +27,12 @@ app.post("/store-code", (req, res) => {
         expires: Date.now() + 5 * 60 * 1000 // 5 minutes
     };
 
+    console.log(`Stored code ${code} for Roblox user ${robloxUserId}`);
+
     res.json({ success: true });
 });
 
-// Website verifies code here
+// Website verifies the code here
 app.post("/verify-code", (req, res) => {
     const { code, websiteUserId } = req.body;
 
@@ -42,6 +49,8 @@ app.post("/verify-code", (req, res) => {
     linkedAccounts[entry.robloxUserId] = websiteUserId;
     delete pendingCodes[code];
 
+    console.log(`Linked Roblox user ${entry.robloxUserId} to website user ${websiteUserId}`);
+
     res.json({ success: true });
 });
 
@@ -51,4 +60,11 @@ app.get("/linked/:robloxUserId", (req, res) => {
     res.json({ websiteUserId: linkedAccounts[id] || null });
 });
 
-app.listen(3000, () => console.log("Server running on port 3000"));
+// Fallback route (fixes "Cannot GET /")
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
